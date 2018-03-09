@@ -349,4 +349,24 @@ describe('fetchWrap/middleware', function() {
       });
     });
   });
+
+  describe('custom middleware', function() {
+    it('applies middleware in sequential order, top-to-bottom', function() {
+      const mockedFetch = mockFetch('how');
+      const words = ['are', 'you', 'today?'];
+      const middlewares = words.map(function(word) {
+        return function(url, options, originalFetch) {
+          return originalFetch(url, options).then(function(result) {
+            return new Promise(function(resolve) {
+              return resolve(`${result} ${word}`);
+            });
+          });
+        };
+      });
+      const fetch = fetchWrap(mockedFetch, middlewares);
+      return fetch('http://localhost/fake-url').then(function(result) {
+        expect(result).to.eql('how are you today?');
+      });
+    });
+  });
 });
